@@ -11,7 +11,9 @@ const SAVE_DIR = "./articles";
 
 const getCleanImgUrl = (url: string): [string, string] => {
   const cleanUrl = url.startsWith("//") ? url.split("?fname=")[1] : url;
-  const extension = cleanUrl.split(".").pop()?.toLowerCase() || "png";
+  const extension = cleanUrl.split("/").pop()?.includes(".")
+    ? cleanUrl.split("/").pop()?.split(".").pop()?.toLowerCase() || ""
+    : "";
   return [cleanUrl, extension];
 };
 
@@ -124,6 +126,7 @@ async function backupBrunchArticle(url: string) {
         const response = await axios.get(cleanImgUrl, {
           responseType: "arraybuffer",
         });
+        // console.log(imagePath);
         fs.writeFileSync(imagePath, response.data);
 
         // Replace image URL in markdown
@@ -138,13 +141,25 @@ async function backupBrunchArticle(url: string) {
     const markdownPath = path.join(dirName, "body.md");
     fs.writeFileSync(markdownPath, updatedMarkdown);
   } catch (error) {
-    console.error("Error saving Brunch article:", url, error);
+    console.error("Error saving Brunch article:", url);
+    console.error(error);
+    return false;
   }
+  return true;
 }
 
-const BASE_URL = "";
+const BASE_URL = "https://brunch.co.kr/@?????/";
 
-for (let i = 1; i <= 1; i++) {
-  backupBrunchArticle(BASE_URL + i);
+const errorList = [];
+for (let i = 1; i <= 60; i++) {
+  const isSuccess = await backupBrunchArticle(BASE_URL + i);
+  if (!isSuccess) {
+    errorList.push(BASE_URL + i);
+  }
   await new Promise((resolve) => setTimeout(resolve, 1000));
+}
+
+console.log(`Failed to backup ${errorList.length} articles`);
+for (const url of errorList) {
+  console.log(url);
 }

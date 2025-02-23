@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "backup": "deno run backupArticles.ts"
+    "backup": "deno run -A backupArticles.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
