@@ -7,8 +7,7 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 
-const SAVE_DIR = "./articles";
-
+// TODO: can miss extension. figure it out from downloaded images
 const getCleanImgUrl = (url: string): [string, string] => {
   const cleanUrl = url.startsWith("//") ? url.split("?fname=")[1] : url;
   const extension = cleanUrl.split("/").pop()?.includes(".")
@@ -61,7 +60,7 @@ async function backupBrunchArticle(url: string) {
     const metadata = {
       title: $(".cover_title").text().trim(),
       subtitle: $(".cover_sub_title").text().trim(),
-      date: formatDate($(".f_l.date").text().trim()),
+      date: $('meta[property="article:published_time"]').attr("content"),
     };
     fs.writeFileSync(
       path.join(dirName, "metadata.json"),
@@ -148,10 +147,13 @@ async function backupBrunchArticle(url: string) {
   return true;
 }
 
-const BASE_URL = "https://brunch.co.kr/@?????/";
+const BASE_URL = "https://brunch.co.kr/@prodi/";
+const MIN_PAGE_ID = 1;
+const MAX_PAGE_ID = 60;
+const SAVE_DIR = "./articles";
 
 const errorList = [];
-for (let i = 1; i <= 60; i++) {
+for (let i = MIN_PAGE_ID; i <= MAX_PAGE_ID; i++) {
   const isSuccess = await backupBrunchArticle(BASE_URL + i);
   if (!isSuccess) {
     errorList.push(BASE_URL + i);
@@ -160,6 +162,4 @@ for (let i = 1; i <= 60; i++) {
 }
 
 console.log(`Failed to backup ${errorList.length} articles`);
-for (const url of errorList) {
-  console.log(url);
-}
+console.log("Failed Articles: " + errorList.join(", "));
